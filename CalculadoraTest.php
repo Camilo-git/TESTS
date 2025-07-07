@@ -1,42 +1,89 @@
 <?php
-// CalculadoraTest.php
-// Archivo de pruebas unitarias para la clase Calculadora
-// Ejecuta este archivo con PHP para verificar el correcto funcionamiento de la lógica de la calculadora
+/**
+ * CalculadoraTest.php
+ * 
+ * Suite de pruebas unitarias para la clase Calculadora.
+ * Este archivo contiene todos los casos de prueba para verificar el correcto
+ * funcionamiento de la lógica de negocio de la calculadora.
+ * 
+ * Casos de prueba incluidos:
+ * - Operaciones aritméticas básicas (suma, resta, multiplicación, división)
+ * - Manejo de errores (división por cero)
+ * - Validación de operaciones no válidas
+ * 
+ * Para ejecutar las pruebas:
+ * php CalculadoraTest.php
+ * 
+ * @author Tu Nombre
+ * @version 1.0
+ * @since 2025-07-07
+ */
 
-require_once 'Calculadora.php'; // Incluye la clase Calculadora
+// Incluir la clase que vamos a probar
+require_once 'Calculadora.php';
 
 /**
- * Compara dos valores y muestra un mensaje según si son iguales o no.
- * @param mixed $expected Valor esperado
- * @param mixed $actual Valor actual
+ * Función auxiliar para comparar resultados esperados con resultados actuales.
+ * 
+ * Esta función implementa una versión simplificada de assertions para
+ * verificar que los resultados de las operaciones sean los esperados.
+ * 
+ * @param mixed $expected Valor que se espera obtener
+ * @param mixed $actual Valor que se obtuvo realmente
  * @param string $message Mensaje descriptivo de la prueba
+ * @return void
  */
 function assertEquals($expected, $actual, $message = '') {
     if ($expected !== $actual) {
-        echo "Fallo: $message. Esperado: $expected, Actual: $actual\n";
+        echo "❌ FALLO: $message. Esperado: $expected, Obtenido: $actual\n";
     } else {
-        echo "OK: $message\n";
+        echo "✅ ÉXITO: $message\n";
     }
 }
 
-// Pruebas básicas de operaciones aritméticas
-assertEquals(5, Calculadora::operar(2, 3, 'sumar'), '2 + 3'); // Suma
-assertEquals(-1, Calculadora::operar(2, 3, 'restar'), '2 - 3'); // Resta
-assertEquals(6, Calculadora::operar(2, 3, 'multiplicar'), '2 * 3'); // Multiplicación
-assertEquals(2, Calculadora::operar(6, 3, 'dividir'), '6 / 3'); // División
+// === INICIO DE PRUEBAS ===
+echo "=== EJECUTANDO PRUEBAS UNITARIAS DE CALCULADORA ===\n\n";
+
+// === PRUEBAS DE OPERACIONES ARITMÉTICAS BÁSICAS ===
+echo "📊 Probando operaciones aritméticas básicas:\n";
+
+// Prueba de suma: 2 + 3 = 5
+assertEquals(5, Calculadora::operar(2, 3, 'sumar'), 'Suma: 2 + 3 = 5');
+
+// Prueba de resta: 2 - 3 = -1
+assertEquals(-1, Calculadora::operar(2, 3, 'restar'), 'Resta: 2 - 3 = -1');
+
+// Prueba de multiplicación: 2 * 3 = 6
+assertEquals(6, Calculadora::operar(2, 3, 'multiplicar'), 'Multiplicación: 2 * 3 = 6');
+
+// Prueba de división: 6 / 3 = 2
+assertEquals(2, Calculadora::operar(6, 3, 'dividir'), 'División: 6 / 3 = 2');
+
+echo "\n";
+
+// === PRUEBAS DE MANEJO DE ERRORES ===
+echo "⚠️  Probando manejo de errores:\n";
 
 // Prueba: división por cero debe lanzar excepción
+echo "Probando división por cero...\n";
 try {
-    Calculadora::operar(2, 0, 'dividir');
-    echo "Fallo: División por cero no lanzó excepción\n";
+    Calculadora::operar(5, 0, 'dividir');
+    echo "❌ FALLO: División por cero no lanzó excepción\n";
 } catch (Exception $e) {
-    echo "OK: División por cero lanza excepción\n";
+    echo "✅ ÉXITO: División por cero lanza excepción correctamente\n";
+    echo "   Mensaje: " . $e->getMessage() . "\n";
 }
 
 // Prueba: operación no válida debe lanzar excepción
+echo "Probando operación no válida...\n";
 try {
     Calculadora::operar(2, 3, 'potencia');
-    echo "Fallo: Operación no válida no lanzó excepción\n";
+    echo "❌ FALLO: Operación no válida no lanzó excepción\n";
 } catch (Exception $e) {
-    echo "OK: Operación no válida lanza excepción\n";
+    echo "✅ ÉXITO: Operación no válida lanza excepción correctamente\n";
+    echo "   Mensaje: " . $e->getMessage() . "\n";
 }
+
+echo "\n=== PRUEBAS COMPLETADAS ===\n";
+echo "📋 Resumen: Se han ejecutado todas las pruebas unitarias.\n";
+echo "🔍 Revisa los resultados arriba para verificar que todo funcione correctamente.\n";
