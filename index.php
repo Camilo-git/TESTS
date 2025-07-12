@@ -115,6 +115,49 @@
         .theme-transition.active {
             opacity: 1;
         }
+
+        /* Estilos mejorados para la tabla de resultados */
+        .table-responsive {
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+
+        /* Tabla en modo oscuro */
+        [data-bs-theme="dark"] .table {
+            --bs-table-bg: #343a40;
+            --bs-table-striped-bg: #495057;
+            color: #ffffff;
+        }
+
+        [data-bs-theme="dark"] .table-primary {
+            --bs-table-bg: #0d6efd;
+            --bs-table-color: #ffffff;
+        }
+
+        /* Animación suave para las celdas al actualizar */
+        .table td {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Efecto hover mejorado */
+        .table-hover tbody tr:hover {
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+        [data-bs-theme="dark"] .table-hover tbody tr:hover {
+            background-color: rgba(13, 110, 253, 0.2);
+        }
+
+        /* Destacar la operación seleccionada en la tabla */
+        .operacion-seleccionada {
+            background-color: rgba(13, 110, 253, 0.15) !important;
+            border-left: 4px solid #0d6efd !important;
+            font-weight: 600;
+        }
+
+        [data-bs-theme="dark"] .operacion-seleccionada {
+            background-color: rgba(13, 110, 253, 0.25) !important;
+        }
     </style>
 </head>
 <body data-bs-theme="light">
@@ -203,10 +246,54 @@
                         </div>
                     </form>
                     
-                    <!-- Resultado de la operación -->
-                    <!-- Este div se actualiza automáticamente con JavaScript -->
-                    <div class="alert alert-info" id="resultado">
-                        <strong>Resultado:</strong> 0
+                    <!-- Resultados de todas las operaciones -->
+                    <!-- Esta tabla se actualiza automáticamente con JavaScript -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">📊 Resultados de Todas las Operaciones</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead class="table-primary">
+                                        <tr>
+                                            <th scope="col">🔢 Operación</th>
+                                            <th scope="col">📝 Expresión</th>
+                                            <th scope="col">✅ Resultado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="resultadosTabla">
+                                        <tr>
+                                            <td>➕ Suma</td>
+                                            <td id="expresionSuma">0 + 0</td>
+                                            <td id="resultadoSuma">0</td>
+                                        </tr>
+                                        <tr>
+                                            <td>➖ Resta</td>
+                                            <td id="expresionResta">0 - 0</td>
+                                            <td id="resultadoResta">0</td>
+                                        </tr>
+                                        <tr>
+                                            <td>✖️ Multiplicación</td>
+                                            <td id="expresionMultiplicacion">0 × 0</td>
+                                            <td id="resultadoMultiplicacion">0</td>
+                                        </tr>
+                                        <tr>
+                                            <td>➗ División</td>
+                                            <td id="expresionDivision">0 ÷ 0</td>
+                                            <td id="resultadoDivision">Error: No se puede dividir por cero</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Operación seleccionada destacada -->
+                    <div class="alert alert-info mt-3" id="operacionDestacada">
+                        <strong>📍 Operación Seleccionada:</strong> <span id="operacionActual">Suma</span>
+                        <br>
+                        <strong>🎯 Resultado:</strong> <span id="resultadoDestacado">0</span>
                     </div>
                 </div>
             </div>
@@ -317,55 +404,118 @@ function toggleTheme(event) {
  */
 
 /**
- * Función principal que realiza el cálculo.
+ * Función principal que realiza todos los cálculos.
  * 
  * Esta función:
- * 1. Obtiene los datos del formulario
- * 2. Los envía via AJAX a operar.php
- * 3. Procesa la respuesta JSON
- * 4. Actualiza el DOM con el resultado
+ * 1. Obtiene los números del formulario
+ * 2. Calcula todas las operaciones disponibles
+ * 3. Actualiza la tabla con todos los resultados
+ * 4. Destaca la operación seleccionada
  * 
  * @returns {void}
  */
 function calcular() {
-    // Obtener referencia al formulario
-    const form = document.getElementById('calcForm');
+    // Obtener los números del formulario
+    const num1 = parseFloat(document.getElementById('num1').value) || 0;
+    const num2 = parseFloat(document.getElementById('num2').value) || 0;
+    const operacionSeleccionada = document.getElementById('operacion').value;
     
-    // Crear objeto FormData con los datos del formulario
-    // FormData automáticamente incluye todos los campos del formulario
-    const formData = new FormData(form);
+    // Lista de todas las operaciones disponibles
+    const operaciones = ['sumar', 'restar', 'multiplicar', 'dividir'];
     
-    // Enviar petición AJAX POST a operar.php
-    fetch('operar.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        // Verificar que la respuesta sea exitosa
-        if (!response.ok) {
-            throw new Error('Error en la comunicación con el servidor');
-        }
-        // Parsear la respuesta JSON
-        return response.json();
-    })
-    .then(data => {
-        // Actualizar el DOM con el resultado
-        const resultadoDiv = document.getElementById('resultado');
-        resultadoDiv.innerHTML = `<strong>Resultado:</strong> ${data.resultado}`;
+    // Objeto para almacenar todos los resultados
+    const resultados = {};
+    let operacionesCompletadas = 0;
+    
+    // Función para actualizar la tabla cuando todas las operaciones estén listas
+    function actualizarTabla() {
+        // Actualizar expresiones matemáticas
+        document.getElementById('expresionSuma').textContent = `${num1} + ${num2}`;
+        document.getElementById('expresionResta').textContent = `${num1} - ${num2}`;
+        document.getElementById('expresionMultiplicacion').textContent = `${num1} × ${num2}`;
+        document.getElementById('expresionDivision').textContent = `${num1} ÷ ${num2}`;
         
-        // Cambiar el estilo según si hay error o no
-        if (data.status === 'error') {
-            resultadoDiv.className = 'alert alert-danger';
+        // Actualizar resultados
+        document.getElementById('resultadoSuma').textContent = resultados.sumar;
+        document.getElementById('resultadoResta').textContent = resultados.restar;
+        document.getElementById('resultadoMultiplicacion').textContent = resultados.multiplicar;
+        document.getElementById('resultadoDivision').textContent = resultados.dividir;
+        
+        // Actualizar operación destacada
+        const nombreOperaciones = {
+            'sumar': '➕ Suma',
+            'restar': '➖ Resta',
+            'multiplicar': '✖️ Multiplicación',
+            'dividir': '➗ División'
+        };
+        
+        document.getElementById('operacionActual').textContent = nombreOperaciones[operacionSeleccionada];
+        document.getElementById('resultadoDestacado').textContent = resultados[operacionSeleccionada];
+        
+        // Cambiar estilo del resultado destacado según si hay error
+        const operacionDestacada = document.getElementById('operacionDestacada');
+        if (resultados[operacionSeleccionada] && resultados[operacionSeleccionada].toString().includes('Error')) {
+            operacionDestacada.className = 'alert alert-danger mt-3';
         } else {
-            resultadoDiv.className = 'alert alert-success';
+            operacionDestacada.className = 'alert alert-success mt-3';
         }
-    })
-    .catch(error => {
-        // Manejar errores de comunicación
-        console.error('Error:', error);
-        const resultadoDiv = document.getElementById('resultado');
-        resultadoDiv.innerHTML = '<strong>Error:</strong> No se pudo realizar la operación';
-        resultadoDiv.className = 'alert alert-danger';
+        
+        // Resaltar la fila de la operación seleccionada en la tabla
+        const filas = document.querySelectorAll('#resultadosTabla tr');
+        filas.forEach(fila => fila.classList.remove('operacion-seleccionada'));
+        
+        // Mapear operaciones a índices de fila
+        const indicesOperacion = {
+            'sumar': 0,
+            'restar': 1,
+            'multiplicar': 2,
+            'dividir': 3
+        };
+        
+        if (indicesOperacion[operacionSeleccionada] !== undefined) {
+            filas[indicesOperacion[operacionSeleccionada]].classList.add('operacion-seleccionada');
+        }
+    }
+    
+    // Calcular cada operación por separado
+    operaciones.forEach(operacion => {
+        // Crear FormData para cada operación
+        const formData = new FormData();
+        formData.append('num1', num1);
+        formData.append('num2', num2);
+        formData.append('operacion', operacion);
+        
+        // Enviar petición AJAX para cada operación
+        fetch('operar.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la comunicación con el servidor');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Almacenar el resultado
+            resultados[operacion] = data.resultado;
+            operacionesCompletadas++;
+            
+            // Si todas las operaciones están completas, actualizar la tabla
+            if (operacionesCompletadas === operaciones.length) {
+                actualizarTabla();
+            }
+        })
+        .catch(error => {
+            console.error(`Error en ${operacion}:`, error);
+            resultados[operacion] = 'Error de comunicación';
+            operacionesCompletadas++;
+            
+            // Si todas las operaciones están completas, actualizar la tabla
+            if (operacionesCompletadas === operaciones.length) {
+                actualizarTabla();
+            }
+        });
     });
 }
 
